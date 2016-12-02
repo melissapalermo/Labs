@@ -1,0 +1,71 @@
+Title
+========================================================
+
+# Geração de Números Aleatórios
+
+Execução de exemplos apresentados em sala
+
+## Método de Inversão
+
+O exempo em quentão propões gerar números aleatórios que sigam a função 
+densidade:
+
+$$
+f_X(x) =  3x^2, \forall x \in (0,1)
+$$
+
+Para gerar números aleatórios utilizando o **método de inversão**, precisamos:
+
+1. Determinar a função acumulada de $x$:
+$$
+F_{X}(x) = \int_{0}^{x} 3y^2 dy = x^3
+$$
+2. Inverter a função acumulada:
+$$
+\begin{alidned}
+u & = x^3 \\
+x & = u^{1/3}
+\end{aligned}
+$$
+3. Gerar amostras aleatórias de acordo com uma distribuição uniforme(0,1):
+4. Aplicar a função inversa, $u^{1/3}$, dos números gerados.
+
+
+```{r}
+geradora = function(n){
+  unif01 = runif(n)
+  x = unif01^(1/3)
+  return (x)
+}  
+n = 1e6
+amostra = geradora(n)
+```
+
+
+```{r}
+hist(amostra, freq=FALSE, main=expression(f(x)==3*x^2))
+curve(3*x^2, add =TRUE)
+```
+
+Os quartis teóricos desta distribuição são determinados 
+pelos pontos em que a função acumulada atinge os valores
+pré-especificados dos quantis (0.25, 0.50, 0.75).
+
+```{r}
+q1 = round(.25^(1/3), 4)
+q2 = round(.50^(1/3), 4)
+q3 = round(.75^(1/3), 4)
+
+```
+
+Os resultados acima são, respectivamente, `r q1`, 
+`r q2`, `r q3`.
+
+```{r}
+quartis = c(0, q1, q2, q3, 1)
+restmp = cut(amostra, quartis, include.lowest = TRUE)
+obs = as.integer(table(restmp))
+esp = rep(n/4 , 4)
+chisq.test(cbind(obs, esp))
+prop.table(table(restmp))
+```

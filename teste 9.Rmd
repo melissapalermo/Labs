@@ -1,0 +1,312 @@
+---
+title: "Teste 9"
+author: "Grupo 2"
+date: "12 de maio de 2016"
+output: html_document
+---
+
+###8.3
+
+**a.**  
+
+Quando adicionamos mais variáveis $X$ ao modelo de regressão, temos como consequência o aumento do valor do $R^2$, pois  a $SQE$ não aumenta conforme aumentamos o número de variáveis preditoras. Logo, a crítica feita se refere ao fato do modelo ter muitas variáveis e por conta disso o valor do $R^2$ está muito proximo de $1$.
+
+**b.**  
+
+O cálculo de $R^2_\alpha$ é mais apropriado pois ele divide cada soma de quadrados pelos seus respectivos graus de liberdade. Esse ajusto pode vir a diminuir quando adicionamos outras variáveis $X$ ao modelo.  
+
+
+###8.11
+```{r echo=FALSE}
+dados = read.table("http://www.stat.ufl.edu/~rrandles/sta4210/Rclassnotes/data/textdatasets/KutnerData/Chapter%20%206%20Data%20Sets/CH06PR05.txt")
+
+y = dados$V1
+x1 = dados$V2
+x2 = dados$V3
+
+fit = lm(y ~ x1+x2+x1*x2)
+beta0 = fit$coefficients[1]
+beta1 = fit$coefficients[2]
+beta2 = fit$coefficients[3]
+beta3 = fit$coefficients[4]
+
+
+```
+
+Modelo de regressão $(8.22)$: $Y_i \mbox{ = } \beta_0 \mbox{ + } \beta_1 X_{i1} \mbox{ + } \beta_2 X_{i2} \mbox{ + } \beta_3 X_{i1} X_{i2} \mbox{ + } \epsilon_i$  
+
+Encontramos:  
+$\hat{Y_i} \mbox{ = } `r beta0` \mbox{ + } `r beta1` X_{i1} \mbox{ + } `r beta2` X_{i2} \mbox{ + } `r beta3` X_{i1} X_{i2}$ 
+
+
+**b.**  
+Queremos testar se $\beta_3$ pode ser retirado do modelo para um $\alpha = 0.05$, então:
+
+$$H_0: \beta_3 = 0 \mbox{ vs } H_1: \beta_3 \neq 0$$  
+
+Estatística do teste: $F^* = \frac{SQReg(X_3|X_1,X_2)(16-4)}{SQE(X_1,X_2,X_3)} \sim F_{1,16-4}$
+
+```{r echo=FALSE}
+fit = lm(y ~ x1+x2+x1*x2)
+fit1 = lm(y ~ x1+x2)
+
+f = qf(0.95,1,12)
+anova(fit1, fit)
+
+
+
+```
+
+
+Encontramos $F^* = `r round(anova(fit1, fit)[2,5], 2)` < `r round(f, 2)`$, logo não rejeitamos $H_0$.  
+
+###8.12  
+
+Sabemos que: $\beta = (X^T X)^{-1}X^TY$. Quando uma matriz é singular isso quer dizer que ela não possui inversa. Então, o problema do estudante deve ser justamente esse, provavelmente porque a matriz $X$ dele é composta somente por zeros e uns.
+
+
+###8.36  
+
+**a.**
+
+```{r echo=FALSE}
+dados = read.table("http://www.stat.ufl.edu/~rrandles/sta4210/Rclassnotes/data/textdatasets/KutnerData/Appendix%20C%20Data%20Sets/APPENC02.txt")
+
+y = dados$V8
+x = dados$V5
+
+fit = lm(y ~ x+ I(x^2))
+beta0 = fit$coefficients[1]
+beta1 = fit$coefficients[2]
+beta11 = fit$coefficients[3]
+
+```
+
+Modelo de regressão polinomial $(8.2)$: $Y_i = \beta_0 \mbox{ + } \beta_1  x_i\mbox{ + } \beta_{11}x^2_i \mbox{ + } \epsilon_i$  
+
+Obtemos: $\hat{Y} = `r round(beta0, 3)` + `r round(beta1, 3)`x `r beta11`x^2$
+
+```{r echo=FALSE}
+plot(fit, which = c(1,1)) 
+
+```
+  
+  
+Segundo o gráfico de resíduos, acreditamos que este é um bom modelo.
+
+**b.**
+```{r echo=FALSE}
+fit1 = lm(y ~ x)
+
+r=summary(fit)$r.squared
+r1=summary(fit1)$r.squared
+
+```
+
+$R^2$ do modelo de segunda ordem é: `r round(r, 3)`  
+$R^2$ do modelo de primeira é: `r round(r1, 3)` 
+
+O aumento do valor do $R^2$, após a inclusão do termo quadrático, é muito pequeno.  
+
+**c.**  
+
+Queremos testar de $\beta_{11}$ pode sair do modelo com $\alpha = 0.05$, então:  
+
+$$H_0: \beta_{11} = 0 \mbox{ vs } H_1: \beta_{11} \neq 0$$
+
+Estatística do teste: $F^* = \frac{SQReg(X^2|X)(n-3)}{SQE(X,X^2} \sim F_{1,n-3} \mbox{ , onde n = 440}$
+
+```{r echo=FALSE}
+f = qf(0.95,1,437)
+anova(fit)
+
+```
+  
+  
+Encontramos $F^* = `r round(anova(fit)[2,4], 2)` > `r round(f, 2)`$, logo rejeitamos $H_0$.
+
+
+###8.37
+
+```{r echo=FALSE}
+
+y = dados$V10/dados$V5
+
+x1_n = dados$V5/dados$V4
+
+x1bar = mean(x1_n)
+
+x1 = x1_n - x1bar
+
+x3_n = dados$V14
+
+x3bar = mean(x3_n)
+
+x3 = x3_n - x3bar
+
+
+fit = lm(y ~ x1+x3+I(x1^2)+I(x3^2)+ x1*x3)
+beta0 = fit$coefficients[1]
+beta1 = fit$coefficients[2]
+beta3 = fit$coefficients[3]
+beta11 = fit$coefficients[4]
+beta33 = fit$coefficients[5]
+beta13 = fit$coefficients[6]
+
+r2 = summary(fit)$r.squared
+
+
+```
+
+**a.**  
+
+Modelo de regressão de segunda ordem com duas variávis preditoras $(8.8)$: 
+$$\hat{y} \mbox{ = } \hat{\beta_0} \mbox{ + }  \hat{\beta_1} x_1 \mbox{ + }  \hat{\beta_3} x_3 \mbox{ + }  \hat{\beta_{11}} x_1^2 \mbox{ + }  \hat{\beta_{33}} x_3^2 \mbox{ + }  \hat{\beta_{13}} x_1 x_3$$  
+Onde: $x_k = X_{ik} - \bar{X_k}$, $k =1$ ou $k=3$
+
+Obtemos:  
+$\hat{Y} = `r round(beta0,3)` \mbox{ + } `r beta1` x_1  `r beta3`x_3 \mbox{ + } `r beta11` x_1^2 \mbox{ + } `r beta33` x_3^2 \mbox{ + } `r beta13` x_{13}$  
+
+$R^2 = `r round(r2, 3)`$
+
+```{r echo=FALSE}
+plot(fit, which = c(1,1)) 
+
+```
+
+  
+No  gráfico  acima,  os  resíduos  apresentam  um  comportamento tendencioso, indicando que
+há violação da hipótese de homogeneidade da variância.  
+
+**b.**  
+
+Queremos testar com $\alpha$ = 0.01:  
+$$H_0: \beta_{11} = \beta_{33} = \beta_{13} = 0 \mbox{ vs } H_1: \beta_i \neq 0 \mbox{, onde i=(11, 33, 13)}$$  
+
+Estatística do teste: $F^* = \frac{SQReg(x_1^2, x_3^2, x_1 x_3|x_1, x_3)(n-p)}{SQE(x_1, x_3, x_1^2, x_3^3, x_1x_3)(p-q)} \sim F_{p-q,n-p} \mbox{ , onde n = 440, q = 3 e p = 6}$
+
+
+```{r echo=FALSE}
+f = qf(0.99,3,434)
+fit1 = lm(y ~ x1+x3)
+anova(fit1, fit)
+
+```
+
+Encontramos: $`r round(anova(fit1, fit)[2,5], 3)` < `r round(f, 3)`$.  
+Logo, não rejeitamos $H_0$.  
+
+
+**c.**  
+
+```{r echo=FALSE}
+y = dados$V10/dados$V5
+
+x1_n = dados$V5
+x1bar = mean(x1_n)
+x1 = x1_n - x1bar
+
+x2_n = dados$V4
+x2bar = mean(x2_n)
+x2 = x2_n - x2bar
+
+x3_n = dados$V14
+x3bar = mean(x2_n)
+x3 = x3_n - x3bar
+
+
+fit = lm(y ~ x1+x2+x3+I(x1^2))
+
+beta0 = fit$coefficients[1]
+beta1 = fit$coefficients[2]
+beta2 = fit$coefficients[3]
+beta3 = fit$coefficients[4]
+beta11 = fit$coefficients[5]
+
+r22 = summary(fit)$r.squared
+
+```
+
+Temos que:  
+$\hat{Y} = `r round(beta0,3)` \mbox{ + } `r beta1` x_1  `r beta2` x_2 \mbox{ + } `r round(beta3, 4)` x_3 `r beta11` x_{11}$  
+
+E $R^2 = `r round(r22, 3)`$. No item *a)*, encontramos $R^2 = `r round(r2, 3)`$, que é o dobro do valor do que foi encontrado neste item.  
+
+###8.39
+
+**a.**
+
+```{r echo=FALSE}
+y = dados$V8
+
+x1 = dados$V5
+x2 = dados$V16
+
+x3 = rep(0 ,440)
+x3[which(dados$V17 == 1)]=1
+
+x4 = rep(0 ,440)
+x4[which(dados$V17 == 2)]=1
+
+x5 = rep(0 ,440)
+x5[which(dados$V17 == 3)]=1
+
+fit = lm(y ~ x1+x2+x3+x4+x5)
+
+beta0 = fit$coefficients[1]
+beta1 = fit$coefficients[2]
+beta2 = fit$coefficients[3]
+beta3 = fit$coefficients[4]
+beta4 = fit$coefficients[5]
+beta5 = fit$coefficients[6]
+
+
+```
+
+O modelo de regressão linear pedido será:  
+
+$\hat{Y} = `r round(beta0,3)` \mbox{ + } `r round(beta1, 3)` x_1   \mbox{ + } `r round(beta2, 3)` x_2  \mbox{ + } `r round(beta3, 3)` x_3  \mbox{ + } `r round(beta4, 3)` x_4 \mbox{ + } `r round(beta5, 3)` x_5$  
+
+
+**b.**  
+
+Queremos testar se:  
+$$H_0: \beta_3= \beta_4 \mbox{  Vs  } H_1: \beta_3 \neq \beta_4 $$  
+
+Ou seja,  
+
+$$H_0: \beta_3 - \beta_4 =0 \mbox{  Vs  } H_1: \beta_3  - \beta_4 \neq 0 $$ 
+
+
+Com um $\alpha$ igual a $0,10$.
+
+Estatística do teste, sob $H_0$:  
+$$t^* = \frac{\beta_3 - \beta_4}{\hat{Var}(\beta_3) - \hat{Var}(\beta_4)} \sim t_{n-p, \frac{ \alpha}{2}} \mbox{ ,onde n=440 e p=6 (número de betas)}$$
+
+```{r echo=FALSE}
+sd_b3b4 = summary(fit)$coefficients[4,2] - summary(fit)$coefficients[5,2] #desvio padrão de beta3 - beta4
+t = qt(0.95,434)
+
+confint_b3b4 = beta3-beta4 +c(-1,1)*(sd_b3b4*t)
+
+```
+O intervalo de confiança para $\beta_3-\beta_4$ será: $[`r round(confint_b3b4,3)`]$
+
+**c.**  
+
+Queremos testar se:  
+$$H_0: \beta_3= \beta_4 = \beta_5 = 0 \mbox{  Vs  } H_1: \beta_i \neq 0 \mbox{(i = 3, 4, 5)}$$  
+
+Com $alpha = 0.10$
+
+Estatística do teste: $F^* = \frac{SQReg(x_3, x_4, x_1 x_5|x_1, x_2)(n-p)}{SQE(x_1, x_2, x_3, x_4, x_5)(p-q)} \sim F_{p-q,n-p} \mbox{ , onde n = 440, q = 3 e p = 6}$
+```{r echo=FALSE}
+f = qf(0.90,3,434)
+fit1 = lm(y ~ x1+x2)
+anova(fit1, fit)
+
+
+```
+
+Encontramos $F^* = `r round(anova(fit1, fit)[2,5], 3)` < `r round(f,3)`$ e *p-valor*$= `r round(anova(fit1, fit)[2,6])`$.  
+Logo, não rejeitamos $H_0$.

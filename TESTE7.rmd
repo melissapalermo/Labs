@@ -1,0 +1,308 @@
+---
+title: "TESTE 7"
+output: html_document
+---
+#4.26
+
+##a
+```{r echo=FALSE}
+
+dados = read.table("http://www.stat.ufl.edu/~rrandles/sta4210/Rclassnotes/data/textdatasets/KutnerData/Appendix%20C%20Data%20Sets/APPENC02.txt")
+
+y = dados$V8
+x1 = dados$V5
+
+reg1 = lm(y ~ x1)
+
+beta_0 =  reg1$coefficients[1] 
+beta_1 =  reg1$coefficients[2]
+t_alpha = qt(0.9875, 338 )
+
+ic_b0 = c(beta_0 - (t_alpha*summary(reg1)$coefficients[1,2]),  beta_0 + (t_alpha*summary(reg1)$coefficients[1,2]))
+
+ic_b1 = c(beta_1 - (t_alpha*summary(reg1)$coefficients[2,2]),  beta_1 + (t_alpha*summary(reg1)$coefficients[2,2]))
+
+```
+
+Os intervalos de confiança com $\alpha = 0,05$ para $\beta_0$ e $\beta_1$ conjuntamente são respectivamente:  
+[`r round(ic_b0, 3)`] e [`r round(ic_b1, 5)`].
+
+##b  
+Os valores sugeridos pelo investigador estão dentro dos intervalos de confiança, logo podemos considerar uma sugestão adequada.
+
+##c  
+```{r echo=FALSE}
+w = sqrt(2 * qf(0.90, 2, 338))
+# 1 - alpha/2*g, onde g=3,  g é valores de x, entao temos que t_alpha será:
+i = 1- 0.1/6
+
+t_alpha = qt(i, 338 )
+
+an = anova(reg1)
+x_barra = mean(dados$V5)
+sxx = an[1,2]/beta_1^2
+s_y = sqrt(an[2,3]*(1/440 + (500 - x_barra)^2/sxx))
+
+ic_500_wh = c(beta_0 + beta_1*500 - w*s_y, beta_0 + beta_1*500 + w*s_y)
+comprimento_500wh = ic_500_wh[2]- ic_500_wh[1]
+
+ic_1000_wh = c(beta_0 + beta_1*1000 - w*s_y, beta_0 + beta_1*1000 + w*s_y)
+comprimento_1000wh = ic_1000_wh[2]- ic_1000_wh[1]
+
+ic_5000_wh = c(beta_0 + beta_1*5000 - w*s_y, beta_0 + beta_1*5000 + w*s_y)
+comprimento_5000wh = ic_5000_wh[2]- ic_5000_wh[1]
+
+ic_500_bon = c(beta_0 + beta_1*500 - t_alpha*s_y, beta_0 + beta_1*500 + t_alpha*s_y)
+comprimento_500bon = ic_500_bon[2]- ic_500_bon[1]
+
+ic_1000_bon = c(beta_0 + beta_1*1000 - t_alpha*s_y, beta_0 + beta_1*1000 + t_alpha*s_y)
+comprimento_1000bon = ic_1000_bon[2]- ic_1000_bon[1]
+
+ic_5000_bon = c(beta_0 + beta_1*5000 - t_alpha*s_y, beta_0 + beta_1*5000 + t_alpha*s_y)
+comprimento_5000bon = ic_5000_bon[2]- ic_5000_bon[1]
+
+```
+
+
+O IC de Bonferroni e de Working Hoteling para $X = 500$ é respectivamente:  
+[`r round(ic_500_bon, 3)`] e  [`r round(ic_500_wh, 3)`].  
+
+O IC de Bonferroni e de Working Hoteling para $X = 1000$ é respectivamente:  
+[`r round(ic_1000_bon, 3)`] e  [`r round(ic_1000_wh, 3)`].  
+
+O IC de Bonferroni e de Working Hoteling para $X = 5000$ é respectivamente:  
+[`r round(ic_5000_bon, 3)`] e [`r round(ic_5000_wh, 3)`].
+
+O comprimentos do IC de Bonferroni para todos os valores de $X$ é: `r round(comprimento_5000bon, 3)` e o comprimentos do IC de Working Hoteling para para todos os valores de $X$ é: `r round(comprimento_5000wh, 3)`. Assim podemos concluir que o intervalo de confiança de Working Hoteling é mais eficiente em todos os casos.
+
+##d
+Intervalo de confiança de Working Hoteling: $\hat Y_h \frac{+}{-} w*s(\hat Y_h)$  
+$w^2 = 2F(1 - \alpha;2;n-2)$   
+Intervalo de confiança de Bonferroni: $\hat Y_h \frac{+}{-} b*s(\hat Y_h)$  
+$b = t(1-\alpha/2g; n-2)$  
+
+O intervalo de confiança de Working Hoteling é mais eficiente, pois seu comprimento é menor. Nota-se que quando aumentamos os níveis de $x$, a confiança permanesse a mesma, pois o valor de $w$ não se altera. 
+Já para o intervalo de Bonferroni, temos que quando aumentamos os níveis de $x$ ($g$) menor será o valor de $\alpha$, ou seja, maior será o tamanho do intervalo.  
+
+
+#6.28
+##a
+Modelo I:
+```{r echo=FALSE}
+
+y = dados$V8
+
+
+x1 = dados$V5 #total pop
+x2 = dados$V4 #land area
+x3 = dados$V16 #total personal income
+
+
+stem(x1, scale = 1, width = 80, atom = 1e-08)
+
+stem(x2, scale = 1, width = 80, atom = 1e-08)
+
+stem(x3, scale = 1, width = 80, atom = 1e-08 )
+
+```
+
+Modelo II:
+```{r echo=FALSE}
+
+
+x11= dados$V5/dados$V4 #total pop/total income
+x22 = dados$V7 # 65 anos ou mais
+x33 = dados$V16 #total personal income
+
+stem(x11, scale = 1, width = 80, atom = 1e-08)
+
+stem(x22, scale = 1, width = 80, atom = 1e-08)
+
+stem(x33, scale = 1, width = 80, atom = 1e-08 )
+
+
+```
+
+
+O gráfico de stem-and-leaf de uma variável quantitativa é um gráfico textual que classifica os itens de dados de acordo com os seus dígitos numéricos mais significativos. Além disso, muitas vezes se fundem cada linha alternada com a sua próxima linha, a fim de simplificar o gráfico para facilitar a leitura.  
+Com esse gráfico, os pontos outliers e a região onde se concentram-se os dados, podem ser identificados claramente.
+
+##b
+```{r echo=FALSE}
+
+panel.cor <- function(x, y, digits=2, prefix="", cex.cor, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- abs(cor(x, y))
+    txt <- format(c(r, 0.123456789), digits=digits)[1]
+    txt <- paste(prefix, txt, sep="")
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt)
+}
+
+```
+
+Modelo I:  
+
+```{r echo=FALSE}
+mod1 = pairs( y~x1+x2+x3 ,upper.panel=panel.cor,lower.panel=panel.smooth)
+a=lm(y~x1)
+aa = lm(y~x3+x1)
+
+```
+
+Temos que:
+$$SQReg(X_1)=`r  format(anova(a)[1,2], scientific=FALSE)`$$
+
+$$SQReg(X_1\mid X_3)=`r  format(anova(aa)[2,2], scientific=FALSE)`$$
+
+O modelo de $SQReg(X_1\mid X_3)$ ser tão pequeno quando comparado a $SQReg(X_1)$ é a alta correlação entre $X_1$ e $X_3$ (`r round(cor(x1,x3),2)`) e de cada uma delas com a variável resposta (`r round(cor(x1,y),2)` e `r round(cor(x3,y),2)`, respectivamente).  
+Desta forma, quando $X_3$ já está no modelo, a contribuição marginal de $X_1$ é pequena na redução da soma de quadrados do erro, pois $X_3$ contém praticamente a mesma informação que $X_1$.  
+
+Modelo II:
+
+```{r echo=FALSE}
+mod2 = pairs( y~x11+x22+x33 ,upper.panel=panel.cor,lower.panel=panel.smooth)
+reg = lm(y~x22)
+summary(reg)
+t = round(qt(0.05/4,df=dim(dados)[1]-3,lower.tail=FALSE),2)
+```
+
+Como podemos ver, as correlações entre $X_1$ e $X_2$, $X_1$ e $X_3$, $X_2$ e $X_3$ são pequenas. Já a correlação de $Y$ com $X_2$, é próxima de zero, o que pode indicar que o $X_2$ não está bem ajustado a regressão.  
+Vamos testar o teste:  
+
+$H_0$: $\beta_2=0$.  
+$H_1$: $\beta_2\neq0$.  
+
+Onde:  
+$$t^*=\frac{\hat{\beta}k}{\sqrt{\widehat{Var(\hat{\beta}_k)}}}\overset{\mbox{sob $H_0$}}{\sim}t_{n-p} = `r t` $$  
+
+
+Logo não rejeitamos $H_0$.  
+
+##c 
+
+```{r echo=FALSE}
+
+model1= lm(y~x1+x2+x3)
+model2= lm(y~x11+x22+x33)
+```
+
+Modelo I:  
+
+$$ \hat Y = `r round(summary(model1)$coefficients[1,1], 3)` + `r format(round(summary(model1)$coefficients[2,1], 4), scientific=FALSE)`X_1  `r round(summary(model1)$coefficients[3,1],3)` X_2 + `r round(summary(model1)$coefficients[4,1],3)`X_3$$  
+
+Modelo II: 
+
+$$ \hat Y = `r round(summary(model2)$coefficients[1,1], 3)` + `r format(round(summary(model2)$coefficients[2,1], 3), scientific=FALSE)`X_1 + `r round(summary(model2)$coefficients[3,1],3)` X_2 + `r round(summary(model2)$coefficients[4,1],3)`X_3$$  
+
+##d
+
+Temos que:  
+$R^2_1 = `r round(summary(model1)$r.square, 3)`$  
+$R^2_2 = `r round(summary(model2)$r.square, 3)`$  
+
+O $R^2$, também conhecido como coeficiente de determinação é a proporção da variabilidade total explicada pelo modelo de regressão ajustado. Como podemos ver neste exercício, o $R^2_2$ é maior que o $R^2_1$. Com isso podemos afirmar que o segundo modelo é mais ajustado que o primeiro modelo, no entando essa diferença é pequena.
+
+##e
+
+```{r echo=FALSE}
+
+plot(model1, which = c(1,2), main = "Modelo I") 
+plot(model2, which = c(1,2), main = "Modelo II")
+
+```
+
+Como podemos ver, tanto o gráfico de resíduos como o da normal são bem parecidos para os dois modelos, podendo assim ter a mesma conclusão.  
+O gráfico de resíduos mostra que a variância não é homogenea, pois ela cresce conforme $X$ aumenta. Também podemos observar que os dados não assumem normalidade.
+
+#6.29
+
+##a
+```{r echo=FALSE}
+reg1 = which(dados$V17 == 1) #regiao 1
+reg2 = which(dados$V17 == 2) #regiao 2
+reg3 = which(dados$V17 == 3) #regiao 3
+reg4 = which(dados$V17 == 4) #regiao 4
+
+y_reg1 = dados$V10[reg1] # y regiao 1
+x1_reg1 = dados$V5[reg1]/ dados$V4[reg1]  # x1 regiao 1
+x2_reg1 = dados$V15[reg1]  # x2 regiao 1
+x3_reg1 = dados$V11[reg1]  # x3 regiao 1
+
+y_reg2 = dados$V10[reg2]
+x1_reg2 = dados$V5[reg2]/ dados$V4[reg2]
+x2_reg2 = dados$V15[reg2]
+x3_reg2 = dados$V11[reg2]
+
+y_reg3 = dados$V10[reg3]
+x1_reg3 = dados$V5[reg3]/ dados$V4[reg3]
+x2_reg3 = dados$V15[reg3]
+x3_reg3 = dados$V11[reg3]
+
+y_reg4 = dados$V10[reg4]
+x1_reg4 = dados$V5[reg4]/ dados$V4[reg4]
+x2_reg4 = dados$V15[reg4]
+x3_reg4 = dados$V11[reg4]
+
+fit_reg1= lm(y_reg1 ~ x1_reg1+ x2_reg1 + x3_reg1) #regressão da regiao 1
+fit_reg2= lm(y_reg2 ~ x1_reg2+ x2_reg2 + x3_reg2) #regressão da regiao 2
+fit_reg3= lm(y_reg3 ~ x1_reg3+ x2_reg3 + x3_reg3) #regressão da regiao 3
+fit_reg4= lm(y_reg4 ~ x1_reg4+ x2_reg4 + x3_reg4) #regressão da regiao 4
+```
+
+$$ \hat Y_1 = `r format(summary(fit_reg1)$coefficients[1,1], scientific=FALSE)  ` + `r round(summary(fit_reg1)$coefficients[2,1], 3)`X_1  `r round(summary(fit_reg1)$coefficients[3,1],3)` X_2 + `r round(summary(fit_reg1)$coefficients[4,1], 3)`X_3$$   
+
+$$ \hat Y_2 = `r round(summary(fit_reg2)$coefficients[1,1],3) ` + `r round(summary(fit_reg2)$coefficients[2,1], 3)`X_1  +`r  round(summary(fit_reg2)$coefficients[3,1],3)` X_2  `r round(summary(fit_reg2)$coefficients[4,1], 3)`X_3$$  
+
+$$ \hat Y_3 = `r format(summary(fit_reg3)$coefficients[1,1], scientific=FALSE) ` + `r round(summary(fit_reg3)$coefficients[2,1], 3)`X_1  +`r  round(summary(fit_reg3)$coefficients[3,1],3)` X_2  `r round(summary(fit_reg3)$coefficients[4,1], 3)`X_3$$ 
+
+$$ \hat Y_4 = `r format(summary(fit_reg4)$coefficients[1,1], scientific=FALSE) ` + `r round(summary(fit_reg4)$coefficients[2,1], 3)`X_1  +`r  round(summary(fit_reg4)$coefficients[3,1],3)` X_2  `r round(summary(fit_reg4)$coefficients[4,1], 3)`X_3$$   
+
+
+##b
+
+Como podemos observar do item anterior, os modelos de regressão encontrados possuem poucas similaridades.  
+
+##c
+Temos que:
+$SQE_1 (X_1, X_2, X_3) = `r format(anova(fit_reg1)[4,2], scientific=FALSE)`$   
+$R^2_1 = `r round(summary(fit_reg1)$r.square, 3)`$  
+
+$SQE_2 (X_1, X_2, X_3) = `r format(anova(fit_reg2)[4,2], scientific=FALSE)`$   
+$R^2_2 = `r round(summary(fit_reg2)$r.square, 3)`$  
+
+$SQReg_3 (X_1, X_2, X_3) = `r format(anova(fit_reg3)[4,2], scientific=FALSE)`$   
+$R^2_3 = `r round(summary(fit_reg3)$r.square, 3)`$  
+
+$SQE_4 (X_1, X_2, X_3) = `r format(anova(fit_reg4)[4,2], scientific=FALSE)`$   
+$R^2_4 = `r round(summary(fit_reg4)$r.square, 3)`$  
+
+O coeficiente de determinação, $R^2$, é interpretado como a proporção da variabilidade dos $Y's$ observados, explicanda pelo modelo considerado. O valor de $R^2$ pertence ao intervalo [0;1] e quanto mais próximo de 1, melhor o ajuste do modelo considerado. Assim temos que o primeiro modelo é o melhor e o quarto modelo é o pior.    
+Sabemos que o $SQE$ representa a variação de Y em torno da reta, ou seja, ele mede o ajuste do modelo e quanto menor o $SQE$ melhor o ajuste do modelo aos valores observados.
+
+
+##d
+Boxplot da região 1 até 4, respectivamente:
+```{r echo=FALSE}
+y_reg1_chapeu = summary(fit_reg1)$coefficients[1,1]+ summary(fit_reg1)$coefficients[2,1]*x1_reg1 + summary(fit_reg1)$coefficients[3,1]* x2_reg1 + summary(fit_reg1)$coefficients[4,1]*x3_reg1
+residuo_reg1 = y_reg1 - y_reg1_chapeu
+
+
+y_reg2_chapeu = summary(fit_reg2)$coefficients[1,1]+ summary(fit_reg2)$coefficients[2,1]*x1_reg2 + summary(fit_reg2)$coefficients[3,1]* x2_reg2 + summary(fit_reg2)$coefficients[4,1]*x3_reg2
+residuo_reg2 = y_reg2 - y_reg2_chapeu
+
+
+y_reg3_chapeu = summary(fit_reg3)$coefficients[1,1]+ summary(fit_reg3)$coefficients[2,1]*x1_reg3 + summary(fit_reg3)$coefficients[3,1]* x2_reg3 + summary(fit_reg3)$coefficients[4,1]*x3_reg3
+residuo_reg3 = y_reg3 - y_reg3_chapeu
+
+y_reg4_chapeu = summary(fit_reg4)$coefficients[1,1]+ summary(fit_reg4)$coefficients[2,1]*x1_reg4 + summary(fit_reg4)$coefficients[3,1]* x2_reg4 + summary(fit_reg4)$coefficients[4,1]*x3_reg4
+residuo_reg4 = y_reg4 - y_reg4_chapeu
+
+
+boxplot(residuo_reg1, residuo_reg2, residuo_reg3, residuo_reg4)
+
+```
+
+Como podemos observar, a média dos resíduos das quatro regiões são iguais a zero.

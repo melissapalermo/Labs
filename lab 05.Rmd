@@ -1,0 +1,78 @@
+---
+title: "Lab 05 - MC em Inferência"
+author: "Melissa Palermo"
+date: "14 de abril de 2016"
+output: html_document
+---
+
+##MSE média aparada
+
+Criar uma função para a média aparada:
+
+```{r cria_media_aparada}
+media_aparada = function(dados, nivel){
+  ord = sort(dados)
+  n = length(ord)
+  remover = c(1:nivel, (n-nivel+1):n)
+  mean(ord[-remover])
+  }
+
+```
+
+Para calcular o MSE da média aparada, precisamos definir o número de replicatas de Monte Carlo, o tamanho da amostra a ser tomada e sua distribuição.
+
+```{r mse_media_aparada}
+m = 1000
+n = 50
+resp = replicate(m, {
+  x = rexp(n, 10)
+  ma = media_aparada(x, 3)
+  return(media_aparada(x, 3))
+})
+```
+
+Visualizando resultados iniciais:
+
+```{r vis_resp}
+head(resp)
+
+```
+
+Para calcular o erro quadrático médio $E(\hat{\theta} - \theta)^2$
+
+```{r mse_media_aparada_exponencial}
+(mse = mean((resp - 1/10)^2)) #1/10 é a esperaça de uma exp(lambda = 10)
+(v = var(resp))
+(vicio = mean(resp) - 1/10)
+v+vicio^2
+```
+
+Fazer histograma:
+```{r histograma}
+hist(resp, main = "Histograma")
+```
+
+##Avaliar  Poder do teste de Hipóteses
+
+```{r teste_t1}
+
+x = rnorm(15, mean=2, sd=1)
+y = rnorm(20, mean=2, sd = 4)
+
+##H0: mu_x = mu_y 
+t.test(x, y, var.equal=FALSE)
+##definir numero replicaçoes
+m=10000
+n = 10
+alpha = 0.05
+
+pvals = replicate(m, {
+  x = rnorm(n, mean=-pi, sd=exp(1))
+  y = rnorm(n, mean=3, sd=exp(1))
+  t.test(x, y, var.equal = FALSE)$p.value
+  })
+
+mean(pvals < alpha)
+
+```
+

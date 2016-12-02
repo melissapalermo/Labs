@@ -1,0 +1,55 @@
+---
+title: "lab 06 - Bootstrap"
+author: "Mel"
+date: "28 de abril de 2016"
+output: html_document
+---
+
+O conjunto de dados `longley`possui uma descrição de variáveis sócio-econômicas a respeito da população dos EUA.  
+
+O modelo de regressão linear da variável `Employed` nas regressões `Armed.Forces` e `Population` pode ser ajustado como segue:  
+
+```{r}
+fit = lm(Employed ~ Armed.Forces + Population, data = longley)
+coef(fit)
+```
+  
+Para implementação de bootstrap, precisamos de uma função que dependa do conjunto de dados e de índices e retorne os parâmetros de interesse:
+
+```{r funao_boot}
+pars = function(dados, indices){
+  fit0 = lm(Employed ~ Armed.Forces+Population, data = dados[indices, ])
+  coef(fit0)
+}
+```
+
+O bootstrap, implementado de maneira manual, segue o algoritmo abaixo:
+
+```{r bootmanual}
+B = 10000
+res = matrix(0, nrow = B, ncol = 3)
+for(b in 1:B){
+  idx = sample(nrow(longley), rep = TRUE)
+  res[b,] = pars(longley, idx)
+}
+(theta_star = colMeans(res))
+colnames(res) = c("intercepto", "fa", "pop")
+
+```
+
+Para cálculo do vício do estimador:
+
+```{r vicio}
+theta_star - pars(longley, 1:nrow(longley))
+
+```
+
+Utilizando o pacote `boot`, o código pode ser simplificado para a seguinte:
+
+```{r pkg_boot}
+library(boot)
+res_boot = boot(longley, pars, R=10000)
+res_boot
+
+```
+

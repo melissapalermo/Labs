@@ -1,0 +1,59 @@
+---
+title: "Integrais via Monte Carlo"
+output: html_document
+---
+
+## Exemplo 1 
+
+Cálculo da integral $\int_0^1 e^{-x} dx$
+
+```{r ex1}
+integral01 = function(n){
+  unifs = runif(n)
+  gx = exp(-unifs)
+  return(mean(gx))
+}
+
+ex01 = integral01(1e5)
+round(ex01, 5)
+```
+
+Aproximação da integral com diferentes tamanho amostrais:
+```{r ex2}
+n = (1:4)*1e6
+t0 = proc.time()
+resultados = rep(0, length(n))
+for (i in seq_along(n))
+  resultados[i] = integral01(n[i])
+t0 = proc.time() - t0
+resultados
+t0
+```
+
+Executar essa mesma tarefa em paralelo (não funciona no windows):
+
+```{r ex02parallel, eval = FALSE}
+library(parallel)
+t1 = proc.time()
+res2 = mclapply(n, integral01, mc.cores = 8)
+t1 = proc.time() - t1
+res2
+t1
+```
+
+## Cálculo do IC (95%):
+
+```{r}
+integral01ic = function(n, conf){
+  
+  unifs = runif(n)
+  gx = exp(-unifs)
+  mugx = mean(gx)
+  vgx = mean((gx - mean(gx))^2)/n
+  mult = qnorm((1-conf)/2, lower.tail = FALSE)
+  ci = mugx + c(-1, 1)*mult*sqrt(vgx)
+  out = list(prob = mugx, ci = ci)
+  return (out)
+}
+integral01ic(1e5, 0.95)
+```

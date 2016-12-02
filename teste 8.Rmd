@@ -1,0 +1,393 @@
+---
+title: "TESTE 8"
+author: "Grupo 2"
+date: "3 de maio de 2016"
+output: html_document
+---
+```{r echo=FALSE}
+dados_65 = read.table("http://www.stat.ufl.edu/~rrandles/sta4210/Rclassnotes/data/textdatasets/KutnerData/Chapter%20%206%20Data%20Sets/CH06PR05.txt") #problema 6.5
+
+dados_615 = read.table("http://www.stat.ufl.edu/~rrandles/sta4210/Rclassnotes/data/textdatasets/KutnerData/Chapter%20%206%20Data%20Sets/CH06PR15.txt") #problema 6.15
+
+dados = read.table("http://www.stat.ufl.edu/~rrandles/sta4210/Rclassnotes/data/textdatasets/KutnerData/Appendix%20C%20Data%20Sets/APPENC02.txt") #apendice c2
+
+
+```
+
+#7.3
+##a.
+```{r echo=FALSE}
+
+model1 = lm(V1 ~ V2 + V3, data = dados_65)
+
+(anova(model1))
+
+```
+$SQReg(X_1) = `r anova(model1)[1,2]`$  
+$SQReg(X_2 \mid X_1) = `r anova(model1)[2,2]`$ 
+
+
+##b.
+Queremos testar se $X_2$ pode ser excluído do modelo, então:  
+$H_0: \beta_2 = 0 \mbox{ vs } H_1: \beta_2 \neq 0$  
+
+$$F^* = \frac {SQReg(X_2 \mid X_1)(16-3)}{SQE(X_1, X_2)} \overset{\mbox{sob $H_0$}}{\sim} F_{1, 13}$$
+
+```{r echo=FALSE}
+model1_1 = lm(V1 ~ V2, data = dados_65)
+(anova(model1_1, model1))
+fvalor = qf(0.99, 1, 13)
+
+```
+
+$F^* = `r round(anova(model1_1, model1)[2,5], 3)`$  
+$p-valor = `r format(round(anova(model1_1, model1)[2,6], 5), scientific=FALSE)`$
+
+Como $`r round(anova(model1_1, model1)[2,5], 3)` > `r round(fvalor, 3)`$, encontramos evidências para rejeitar $H_0$.
+
+#7.5
+##a.
+```{r echo=FALSE}
+model2 = lm(V1 ~ V3 + V2 + V4, data = dados_615)
+(anova(model2))
+
+
+```
+
+$SQReg(X_2) = `r round(anova(model2)[1,2], 3)`$  
+$SQReg(X_1 \mid X_2) = `r round(anova(model2)[2,2], 3)`$   
+$SQReg(X_3 \mid X_2, X_1) = `r round(anova(model2)[3,2], 3)`$  
+
+##b.
+
+Queremos testar se $X_3$ pode ser excluído do modelo, então:  
+$H_0: \beta_3 = 0 \mbox{ vs }H_1: \beta_3 \neq 0$  
+
+$$F^* = \frac {SQReg(X_3 \mid X_1, X_2)(46-4)}{SQE(X_1, X_2, X_3)} \overset{\mbox{sob $H_0$}}{\sim} F_{1, 42}$$
+```{r echo=FALSE}
+model2 = lm(V1 ~ V2 + V3 + V4, data = dados_615)
+model2_2 = lm(V1 ~ V2 + V3, data = dados_615)
+(anova(model2_2, model2))
+fvalor = qf(0.975, 1, 42)
+
+```
+$F^* = `r round(anova(model2_2, model2)[2,5], 3)`$  
+$p-valor = `r format(round(anova(model2_2, model2)[2,6], 3), scientific=FALSE)`$
+
+Como $`r round(anova(model2_2, model2)[2,5], 3)` < `r round(fvalor, 3)`$, não encontramos evidências para rejeitar $H_0$.
+
+#7.6
+##a.
+Queremos testar se $X_2$ e $X_3$ podem ser excluídos do modelo, então:  
+$H_0: \beta_2 = \beta_3 = 0 \mbox{ vs }H_1: \beta_2\neq 0 \mbox{ ou } \beta_3 \neq 0$  
+
+$$F^* = \frac {SQReg(X_2, X_3 \mid X_1)(46-4)}{SQE(X_1, X_2, X_3)(4-2)} \overset{\mbox{sob $H_0$}}{\sim} F_{2, 42}$$
+```{r echo=FALSE}
+model2_3 = lm(V1 ~ V2 , data = dados_615)
+(anova(model2_3, model2))
+fvalor = qf(0.975, 2, 42)
+```
+
+$F^* = `r round(anova(model2_3, model2)[2,5], 3)`$  
+$p-valor = `r format(round(anova(model2_3, model2)[2,6], 3), scientific=FALSE)`$
+
+Como $`r round(anova(model2_3, model2)[2,5], 3)` >`r round(fvalor, 3)`$, encontramos evidências para rejeitar $H_0$.
+
+#7.9
+Queremos testar:  
+$H_0: \beta_1 = -1 \mbox{ e } \beta_2 = 0 \mbox{ vs }H_1: \beta_1 \neq -1 \mbox{ ou } \beta_2 \neq 0$  
+Vamos então calcular dois intervalos de confiança, uma para $\beta_1$ e outro para $\beta_2$ com $\alpha = 0.025$. Temos então:  
+
+Um intervalo de $100(1-\frac{\alpha}{2})\%$ de confiança para $\beta_i$, onde $i = [1,2]$ é dado por:
+
+$$\begin{eqnarray} IC(\beta_i, 1-\frac{\alpha}{4}) &=& \left[\hat{\beta}i -t{n-p,\alpha/4}\sqrt{\widehat{Var(\hat{\beta}i)}};\right.\ & &\left. \hat{\beta}_i +t{n-p,\alpha/4}\sqrt{\widehat{Var(\hat{\beta}_i)}}\right] \end{eqnarray}$$
+```{r echo=FALSE}
+
+sd_beta1 = summary(lm(V1 ~ V2 + V3 + V4, data = dados_615 ))$coefficients[2,2]
+beta1_hat = summary(lm(V1 ~ V2 + V3 + V4, data = dados_615 ))$coefficients[2,1]
+
+sd_beta2 = summary(lm(V1 ~ V2 + V3 + V4, data = dados_615 ))$coefficients[3,2]
+beta2_hat = summary(lm(V1 ~ V2 + V3 + V4, data = dados_615 ))$coefficients[3,1]
+
+p = length((summary(lm(V1 ~ V2 + V3 + V4, data = dados_615 ))$coefficients[,1]))
+n=dim(dados_615)[1]
+
+t_alpha_4 = qt(1-0.025/4, df=(n-p))
+
+#ic_b1 = c(beta1_hat-(t_alpha_4*sd_beta1), beta1_hat+(t_alpha_4*sd_beta1))
+#ic_b2 = c(beta2_hat-(t_alpha_4*sd_beta2), beta2_hat+(t_alpha_4*sd_beta2))
+#ou = 
+ic = confint(lm(V1 ~ V2 + V3 + V4, data = dados_615 ), level=1-0.025/2)
+```
+
+$IC(\hat\beta_1) = [`r round(ic[2,1], 3)`;`r round(ic[2,2], 3)`]$  
+$IC(\hat\beta_2) = [`r round(ic[3,1], 3)`;`r round(ic[3,2], 3)`]$
+
+Como $-1$ está contido em $IC(\hat\beta_1)$ e $0$ em $IC(\hat\beta_2)$, não rejeitamos $H_0$.  
+
+#7.14
+##a.
+```{r echo=FALSE}
+model2_3 = lm(V1 ~ V2 , data = dados_615)
+model2_4 = lm(V1 ~ V3, data  = dados_615) #SQE(X2) = anova(model2_4)[2,2]
+model2_5 = lm(V1 ~ V3 + V2, data  = dados_615) #SQReg(X1|X2) = anova(model2_5)[2,2]
+model2_6 = lm(V1 ~ V3 + V4 + V2, data  = dados_615) #SQReg(x1| x2, x3) = anova(model2_6)[3,2]
+#SQE(X2, X3) = anova(model2_6)[3,2]+anova(model2_6)[4,2]
+# ou model2_8 = lm(V1 ~ V3 + V4, data  = dados_615) - SQE(X2, X3) = anova(model2_8)[3,2]
+
+```
+$$R^2_{Y1} = \frac{SQReg(X_1)}{SQT} = `r round(summary(model2_3)$r.squared, 3)`$$  
+
+$$R^2_{Y 1\mid 2} =\frac{SQReg(X_1\mid X_2)}{SQE(X_2)} = `r round(anova(model2_5)[2,2]/anova(model2_4)[2,2], 3)`$$  
+
+$$R^2_{Y 1\mid 2 3}=\frac{SQReg(X_1\mid X_2,X_3)}{SQE(X_2,X_3)} = `r round(anova(model2_6)[3,2]/(anova(model2_6)[3,2]+anova(model2_6)[4,2]), 3)`$$
+
+O coeficiente de determinação parcial irá avaliar a contribuição marginal de $X_1$, dado que as demais já estão no modelo.  
+Nota-se que essa contruibuição diminui conforme adicionamos $X_2$ e $X_3$.
+
+##b.
+```{r echo=FALSE}
+model2_3 = lm(V1 ~ V3 , data = dados_615)
+model2_4 = lm(V1 ~ V2, data  = dados_615) #SQE(X1) = anova(model2_4)[2,2]
+model2_5 = lm(V1 ~ V2 + V3, data  = dados_615) #SQReg(X2|X1) = anova(model2_5)[2,2]
+model2_6 = lm(V1 ~ V2 + V4 + V3, data  = dados_615) #SQReg(x2| x1, x3) = anova(model2_6)[3,2]
+#SQE(X1, X3) = anova(model2_6)[3,2]+anova(model2_6)[4,2]
+
+```
+$$R^2_{Y2} = \frac{SQReg(X_2)}{SQT} = `r round(summary(model2_3)$r.squared, 3)`$$  
+
+$$R^2_{Y 2\mid 1} =\frac{SQReg(X_2\mid X_1)}{SQE(X_1)} = `r round(anova(model2_5)[2,2]/anova(model2_4)[2,2], 3)`$$  
+
+$$R^2_{Y 2\mid 1 3}=\frac{SQReg(X_2\mid X_1,X_3)}{SQE(X_1,X_3)} = `r round(anova(model2_6)[3,2]/(anova(model2_6)[3,2]+anova(model2_6)[4,2]), 3)`$$
+
+O coeficiente de determinação parcial irá avaliar a contribuição marginal de $X_2$, dado que as demais já estão no modelo.  
+Nota-se que essa contruibuição diminui conforme adicionamos $X_1$ e $X_3$.  
+Podemos concluir também que a contribuição de $X_1$ é maior do que a do $X_2$.
+
+##7.18
+##a.
+```{r echo=FALSE}
+y_star = (1/sqrt((length(dados_615$V1))-1))*((dados_615$V1 - mean(dados_615$V1))/sd(dados_615$V1))
+x1_star = (1/sqrt((length(dados_615$V2))-1))*((dados_615$V2 - mean(dados_615$V2))/sd(dados_615$V2))
+x2_star = (1/sqrt((length(dados_615$V3))-1))*((dados_615$V3 - mean(dados_615$V3))/sd(dados_615$V3))
+x3_star = (1/sqrt((length(dados_615$V4))-1))*((dados_615$V4 - mean(dados_615$V4))/sd(dados_615$V4))
+
+model3 = lm(y_star ~ x1_star+ x2_star + x3_star)
+
+```
+
+$Y^*_i = \frac{1}{\sqrt{n-1}}(\frac{Y_i - \bar{Y}}{sy})$  
+$X^*_{i,k} = \frac{1}{\sqrt{n-1}}(\frac{X_{i,k} - \bar{X_k}}{sx_k})$, onde i=(1, 2, ...46)e k=(1, 2,3).  
+
+$\beta_0^* = `r round(model3$coefficients[1], 1)`$   
+$\beta_1^* = `r round(model3$coefficients[2], 3)`$    
+$\beta_2^* = `r round(model3$coefficients[3], 3)`$  
+$\beta_3^* = `r round(model3$coefficients[4], 3)`$ 
+
+##b.
+```{r echo=FALSE}
+model3_1 = lm(y_star ~ x2_star + x3_star + x1_star)#SQReg(x1| x2, x3) = anova(model3_1)[3,2]
+model3_2 = lm(y_star ~ x2_star + x3_star) # SQE(X2, X3) = anova(model3_2)[3,2]
+
+model3_3 = lm(y_star ~ x1_star + x3_star + x2_star)#SQReg(x2| x1, x3) = anova(model3_3)[3,2]
+model3_4 = lm(y_star ~ x1_star + x3_star) # SQE(X1, X3) = anova(model3_4)[3,2]
+
+model3_5 = lm(y_star ~ x1_star + x2_star + x3_star)#SQReg(x3| x1, x2) = anova(model3_5)[3,2]
+model3_6 = lm(y_star ~ x1_star + x2_star) # SQE(X1, X2) = anova(model3_6)[3,2]
+
+```
+
+$$R^2_{Y 1\mid 2,3} = `r round(anova(model3_1)[3,2]/anova(model3_2)[3,2], 3)`$$  
+Quando $X_1$ é adicionada ao modelo contendo $X_2$ e $X_3$, a $SQE(X_2, X_3)$ é reduzida em $`r round(anova(model3_1)[3,2]/anova(model3_2)[3,2], 3)*100`$ %. Isto é, $`r round(anova(model3_1)[3,2]/anova(model3_2)[3,2], 3)*100`$% da variação em  que não pode ser explicada pelo modelo com $X_2$ e $X_3$ é explicada pela inclusão de $X_1$ no modelo.  
+
+$$R^2_{Y 2\mid 3,3} =`r round(anova(model3_3)[3,2]/anova(model3_4)[3,2],3) `$$  
+Quando $X_2$ é adicionada ao modelo contendo $X_1$ e $X_3$, a $SQE(X_1, X_3)$ é reduzida em $`r round(anova(model3_3)[3,2]/anova(model3_4)[3,2], 3)*100`$%. Isto é, $`r round(anova(model3_3)[3,2]/anova(model3_4)[3,2], 3)*100`$% da variação em  que não pode ser explicada pelo modelo com $X_1$ e $X_3$ é explicada pela inclusão de $X_2$ no modelo.  
+
+$$R^2_{Y 3\mid 1,2} =`r round(anova(model3_5)[3,2]/anova(model3_6)[3,2],3)`$$  
+Quando $X_3$ é adicionada ao modelo contendo $X_1$ e $X_2$, a $SQE(X_1, X_2)$ é reduzida em $`r round(anova(model3_5)[3,2]/anova(model3_6)[3,2], 3)*100`$%. Isto é, $`r round(anova(model3_5)[3,2]/anova(model3_6)[3,2], 3)*100`$% da variação em  que não pode ser explicada pelo modelo com $X_1$ e $X_2$ é explicada pela inclusão de $X_3$ no modelo. 
+
+##c.
+```{r echo=FALSE}
+beta1 = sd(dados_615$V1)*model3$coefficients[2]/sd(dados_615$V2)
+beta2 = sd(dados_615$V1)*model3$coefficients[3]/sd(dados_615$V3)
+beta3 = sd(dados_615$V1)*model3$coefficients[4]/sd(dados_615$V4)
+beta0 = mean(dados_615$V1) - beta1*mean(dados_615$V2)-beta2*mean(dados_615$V3)-beta3*mean(dados_615$V4)
+
+
+```
+A volta para os coeficientes de regressão estimados pelo modelo de regressão nas variáveis originais é obtido por:
+
+$\beta_k = (\frac{sy}{sk})\beta^*_k \mbox{,   (k =1, 2, 3)}$   
+$\beta_0 = \bar{Y} \mbox{ - } \beta_1 \bar{X} \mbox{ - } \beta_2 \bar{X}   \mbox{ - } \beta_3 \bar{X}$  
+
+Temos então:  
+$\beta_0 = `r round(beta0, 3)`$  
+$\beta_1 = `r round(beta1, 3)`$  
+$\beta_2 = `r round(beta2, 3)`$  
+$\beta_3 = `r round(beta3, 3)`$  
+
+Betas obtidos no Problema 6.15:  
+
+$\beta_0 = `r round(model2$coefficients[1], 3)`$    
+$\beta_1 = `r round(model2$coefficients[2], 3)`$    
+$\beta_2 = `r round(model2$coefficients[3], 3)`$    
+$\beta_3 = `r round(model2$coefficients[4], 3)`$  
+
+Encontramos os mesmos valores para os $\beta_k$'s.
+
+#7.26
+##a.
+```{r echo=FALSE}
+y = dados_615$V1 #satisfaçao
+x1 = dados_615$V2 #idade paciente
+x2 = dados_615$V3 #doença
+
+fit = lm(y ~ x1+x2)
+
+```
+
+Ajuste de regressão linear de primeira ordem é:  
+
+$$ Y = \beta_0 \mbox{ + } \beta_1 X_1 \mbox{ + } \beta_2 X_2 \mbox{ + } \varepsilon$$  
+
+Com os dados do Problema 6.15, temos:  
+$$\hat{Y} = `r round(fit$coefficients[1], 3)` `r round(fit$coefficients[2], 3)` X_1  `r round(fit$coefficients[3], 3)` X_2$$
+
+##b.
+
+Betas obtidos no Problema 6.15:  
+$\beta_{1,6.15} = `r round(model2$coefficients[2], 3)`$ e $\widehat{var}(\beta_{1,6.15}) =`r round(summary(model2)$coefficients[2,2]^2, 3)`$   
+$\beta_{2,6.15} = `r round(model2$coefficients[3], 3)`$ e $\widehat{var}(\beta_{2,6.15}) =`r round(summary(model2)$coefficients[3,2]^2, 3)`$ 
+
+Betas obtidos neste Problema:  
+$\beta_1 = `r round(fit$coefficients[2], 3)`$  e $\widehat{var}(\beta_1) =`r round(summary(fit)$coefficients[2,2]^2, 3)`$     
+$\beta_2 = `r round(fit$coefficients[3], 3)`$ e $\widehat{var}(\beta_2) =`r round(summary(fit)$coefficients[3,2]^2, 3)`$  
+
+As estimativas dos betas e suas variâncias são muito semelhantes, podemos então concluir que com a adição do $X_3$ não há mudança significativa no modelo.  
+
+##c.
+```{r echo=FALSE}
+y = dados_615$V1 #satisfaçao
+x1 = dados_615$V2 #idade paciente
+x2 = dados_615$V3 #doença
+x3= dados_615$V4
+fit1 = lm(y ~ x1) #SQReg(x1) = anova(fit1)[1,2]
+fit2 = lm(y ~ x2) #SQReg(x2) = anova(fit2)[1,2]
+
+fit3 = lm(y ~ x3 + x1) #SQReg(x1|x3) = anova(fit3)[2,2]
+fit4 = lm(y ~ x3 + x2) #SQReg(x2|x3) = anova(fit4)[2,2]
+
+```
+
+$SQReg(X_1)=`r round(anova(fit1)[1,2], 3)`$ $\neq$ $SQReg(X_1|X_3) = `r round(anova(fit3)[2,2], 3)`$  
+
+$SQReg(X_2)=`r round(anova(fit2)[1,2], 3)`$ $\neq$ $SQReg(X_2|X_3) = `r round(anova(fit4)[2,2], 3)`$
+
+##d.
+Matriz de correlação do Problema 6.15:
+
+```{r echo=FALSE}
+panel.cor <- function(x, y, digits=2, prefix="", cex.cor, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- abs(cor(x, y))
+    txt <- format(c(r, 0.123456789), digits=digits)[1]
+    txt <- paste(prefix, txt, sep="")
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt)
+}
+(mod1 = pairs( y~x1+x2+x3 ,upper.panel=panel.cor,lower.panel=panel.smooth))
+
+
+
+```
+
+A correlação de $X_2$ e $X_3$ é maior do que a de $X_1$ e $X_3$, como consequência o $SQReg(X_2)$ diminuirá mais do que o $SQReg(X_1)$ após a adição do $X_3$ no modelo.
+
+#7.37
+##a.
+```{r echo=FALSE}
+y = dados$V8 #active physicians
+x1 = dados$V5 #total população
+x2 = dados$V16 #total personal income
+x3 = dados$V4 #land area
+x4 = dados$V7 #percent of population
+x5 = dados$V9 #hospital bed
+x6 = dados$V10 # total serius crime
+
+
+modelo_x3 = lm(y~x1 + x2 + x3) #SQReg(x3| x1, x2) = anova(modelo_x3)[3,2]
+modelo_x3_21 = lm(y~x1+x2)  # SQE(X1, X2) = anova(modelo_x3_21)[3,2]
+
+R_x312 = anova(modelo_x3)[3,2]/anova(modelo_x3_21)[3,2] #R^2(y3|12)
+
+modelo_x4 = lm(y~x1+x2+x4) #SQReg(x4| x1, x2) = anova(modelo_x3)[3,2]
+
+R_x412 = anova(modelo_x4)[3,2]/anova(modelo_x3_21)[3,2]#R^2(y4|12)
+
+modelo_x5 = lm(y~x1 + x2+x5) #SQReg(x5| x1, x2) = anova(modelo_x5)[3,2]
+
+R_x512 = anova(modelo_x5)[3,2]/anova(modelo_x3_21)[3,2]#R^2(y5|12)
+
+modelo_x6 = lm(y~x1 + x2 +x6)#SQReg(x4| x1, x2) = anova(modelo_x6)[3,2]
+
+R_x612 = anova(modelo_x6)[3,2]/anova(modelo_x3_21)[3,2]#R^2(y6|12)
+
+```
+
+$R^2_{Y3|12} = `r round(R_x312, 3)`$ 
+
+$R^2_{Y4|12} = `r round(R_x412, 3)`$   
+
+$R^2_{Y5|12} = `r round(R_x512, 3)`$  
+
+$R^2_{Y6|12} = `r round(R_x612, 3)`$ 
+
+##b.  
+É evidente que adicionar $X_5$ ao modelo é a melhor opção, pois é o valor de $R^2$ parcial o mais próximo de $1$.
+
+$SQReg(X_3|X_1,X_2) = `r format(anova(modelo_x3)[3,2], scientific=FALSE)`$  
+
+$SQReg(X_4|X_1,X_2) = `r format(anova(modelo_x4)[3,2], scientific=FALSE)`$ 
+
+$SQReg(X_5|X_1,X_2) = `r format(anova(modelo_x5)[3,2], scientific=FALSE)`$ 
+
+$SQReg(X_6|X_1,X_2) = `r format(anova(modelo_x6)[3,2], scientific=FALSE)`$  
+
+$SQReg(X_5|X_1,X_2)$ é o maior valor dos outros $SQReg$ calculados.  
+
+##c. 
+```{r echo=FALSE}
+modelo_x3 = lm(y~x3)
+modelo_x3_21 = lm(y~x1+x2+x3) 
+#pvalor_x312 = round(anova(modelo_x3, modelo_x3_21)[2,6],3)
+
+
+modelo_x4 = lm(y~x4)
+modelo_x4_21 = lm(y~x1+x2+x4) 
+
+
+modelo_x5 = lm(y~x5)
+modelo_x5_21 = lm(y~x1+x2+x5) 
+
+
+modelo_x6 = lm(y~x6)
+modelo_x6_21 = lm(y~x1+x2+x6) 
+
+```
+
+Definimos $H_0: \beta_5 = 0$ Vs  $H_0: \beta_5 \neq 0$ e $\alpha = 0.01$  
+
+Encontramos $p-valor=`r round(anova(modelo_x5, modelo_x5_21)[2,6],3)`$ < $\alpha$, logo rejeitamos $H_0$.  
+
+$F^*_{X_3} = `r round(anova(modelo_x3, modelo_x3_21)[2,5], 3)`$  
+
+$F^*_{X_4} = `r round(anova(modelo_x4, modelo_x4_21)[2,5], 3)`$  
+
+$F^*_{X_5} = `r round(anova(modelo_x5, modelo_x5_21)[2,5], 3)`$  
+
+$F^*_{X_6} = `r round(anova(modelo_x6, modelo_x6_21)[2,5], 3)`$  
+
+Temos que a estatística $F^*$, para testar se $\beta_5 = 0$, é a menor dentre as calculadas.  
+Já era esperado, pois dos itens anteriores vimos que $X_5$ é a variável mais significativa para o modelo.

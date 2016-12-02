@@ -1,0 +1,342 @@
+---
+title: "Atividade 02 - ME524"
+author: "Melissa Palermo"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#1. 
+A distribuição de $\mbox{Pareto}(a,b)$ tem a seguinte distribuição:
+
+$$F(x) = 1 - \left( \frac{b}{x} \right)^a,$$
+
+expressão na qual $x \geq b, a > 0$. Apresente um algoritmo para geração de variáveis aleatórias para esta distribuição. Usando o R, simule uma amostra para $\mbox{Pareto}(2,2)$. Apresente o histograma da amostra combinado com a densidade teórica da mesma para comparação.  
+
+
+**Resposta:**  
+
+Temos que: 
+$f_X(x) = ab^ax^{-a-1}.$ Para a=b=2, temos que $f_X(x)= 8x^{-3}$  
+
+$F(x) = 1 - \left( \frac{b}{x} \right)^a$
+$u = 1 - (\frac{b}{x})^a$  
+$u-1=- (\frac{b}{x})^a$  
+$(1-u)^{\frac{1}{a}} = \frac{b}{x}$  
+isolando $x$, temos que: $x = \frac{b}{(1-u)^{\frac{1}{a}}}$  
+Utilizaremos o Método da Inversão para obter variáveis aleatórias.  
+
+```{r }
+n=1e3
+a = 2
+b = 2
+geradora = function(n){
+  u = runif(n)
+  x = b/((1-u)^(1/a))
+  return (x)
+}  
+
+amostra = geradora(n)
+
+hist(amostra, freq=FALSE, breaks=100,xlim = c(0,15), main=expression(f(x)==8*x^-3)) 
+curve(8*x^-3, add =TRUE)
+
+
+```
+
+
+
+
+#2. 
+Prove que variáveis aleatórias geradas pelo método de aceitação-rejeição são, de fato, uma amostra aleatória da densidade-alvo $f_X$.  
+
+**Resposta:**    
+O algoritmo do método da rejeição pode ser apresentado nos passos abaixo:  
+
+1) Simularmos os valores $Y$ com densidade $g$ tal que $\frac{f(x)}{g(x)} \leq c, \forall x:f(x)>0.$. Para gerarmos uma amostra de $Y$, podemos usar o método da inversão na $g(x)$.
+
+2) Geramos um número aleatório $U\sim U(0,1)$.  
+
+3) Se $U\leq \frac{f(X)}{cg(X)}$, aceitamos o valor $X$, então temos $X = Y$ e pare. Caso contrário, retorna-se ao passo 1. 
+
+Para provar o método, no caso discreto, temos que mostrar que a distribuição condicional de $Y=y$ dado que $U \leq \frac{f(Y)}{cg(Y)}$ é de fato $f(y)$.O caso contínuo é similar.
+
+Assumindo que $Aceitar = U \leq \frac{f(Y)}{cg(y)}$, temos que:
+
+$$P(Aceitar|Y=y) = P\left( U<\frac{f(y)}{cg(y)}\right) = \frac{f(y)}{cg(y)}$$
+
+Então,
+
+$$P(Aceitar) = \sum_y P(Aceitar|Y=y)P(Y=y) = \sum_y \frac{f(y)}{cg(y)} g(y) = \frac{1}{c}$$
+
+Substituindo,
+
+$$P(k|Aceito) = \frac{P(Aceito|k)P(k)}{P(Aceito)} = \frac{\frac{f(y)}{cg(y)}g(k)}{\frac{1}{c}} = f(k)$$
+
+#3. 
+O núcleo escalonado de Epanechnikov é:
+
+$$f_e(x) = \frac{3}{4}(1-x^2), |x| < 1.$$
+
+Uma proposta de geração de variáveis aleatórias para este caso é:  
+    a. $U_1, U_2, U_3 \sim U(-1,1)$  
+    b. Se $|U_3| > |U_2|$ e $|U_3| > |U_1|$, retorne $U_2$. Caso contrário, retorne $U_3$.
+    
+Implemente este algoritmo e construa um histograma para uma amostra de tamanho grande. Prove que este algoritmo de fato gera variáveis da densidade dada.
+
+**Resposta**  
+
+
+```{r }
+epa = function (n) {
+  x=rep(0, n)
+  for(i in 1:n){
+    u=runif(3, -1, 1)
+    if(abs(u[3])>abs(u[2])&&abs(u[3])>abs(u[1])){
+      x[i] = u[2]
+    }
+    else{
+      x[i] = u[3]
+    }
+  }
+  return(x)
+}
+
+n=1e6
+amostra = epa(n)
+hist(amostra, main="Epanechnikov", freq=FALSE)
+curve((3/4)*(1-x^2), add = TRUE)
+```
+
+Para provar que geramos variáveis da densidade dada, faremos o teste qui-quadrado: 
+```{r }
+#teste qui-quadrado para adequacidade
+
+x<-seq(-1,1,0.0001)
+fdp <- function(x) {(3/4)*(1-x^2)}
+for(i in 1:length(x)){
+
+  area<-integrate(fdp,-1,x[i])$value
+
+  if(area<=0.25){
+   q1<- x[i]
+  }
+  if(area<=0.5){
+   q2<- x[i]
+  }
+  if(area<=0.75){
+   q3<- x[i]
+  }
+}
+quartis = c(-1,q1,q2,q3,1)
+restmp = cut(amostra, quartis, include.lowest = TRUE)
+obs = as.integer(table(restmp))
+esp = rep(n/4 , 4)
+
+```
+
+Encontramos $p-valor = `r round(chisq.test(cbind(obs, esp))$p.value, 2)`> \alpha$, então não temos evidências para rejeitar a hipótese que os dados gerados são iguais aos dados teóricos.  
+
+
+#4. 
+Seja $X$ uma variável não-negativa com $\mu = E(X) < \infty$. Para uma amostra aleatória $x_1, \dots, x_n$ da distribuição de $X$, a razão de Gini é:
+
+$$G = \frac{1}{2n^2\mu} \sum_{j=1}^n \sum_{i=1}^n |x_i - x_j|.$$
+
+Esta quantidade é utilizada em Economia para medir a desigualdade na distribuição de renda. Observe também que $G$ pode ser reescrito como função das estatísticas de ordem:
+
+$$G = \frac{1}{n^2 \mu} \sum_{i=1}^n (2i - n - 1)x_{(i)}.$$
+
+Se a média é desconhecida, considere $\hat{G}$ como a estatística $G$, na qual substitui-se $\mu$ por $\bar{X}$. Estime por simulação a média, a mediana e os decis (quantis $0, 10, 20, \dots, 80, 90, 100$) de $\hat{G}$, quando $X$ tem:
+
+    a. Distribuição lognormal
+    b. Distribuição uniforme
+    c. Distribuição Bernoulli(0.1)
+    
+Escolha os parâmetros das distribuições log-normal e uniforme conforme achar adequado.
+
+
+**Resposta:**
+Lognormal(0,1)
+```{r}
+n=100
+tam=1000
+g=rep(0,tam)
+r.gini1=function(n,tam){
+  for (j in 1:tam){
+    x=sort(rlnorm(n))
+    for(i in 1:n){
+      g[j]=(1/((n^2)*mean(x)))*sum(2*i-n-1)*x[i]
+    }
+  }
+  return (g)
+}
+g1=r.gini1(n,tam)
+gbarra1=mean(g1)
+gmediana1=median(g1)
+quantis1=seq(0, 1, by=0.1)
+decis1=quantile(g1, probs = quantis1)
+
+```
+Temos que:
+$E( \hat{G}) = `r round(mean(g1), 2)`$  
+$Mediana( \hat{G}) = `r  round(median(g1), 2)`$
+$Quanis( \hat{G}) = [`r round(decis1, 4)`]$
+
+Uniforme(0,1)
+```{r cache=TRUE}
+r.gini2=function(n,tam){
+  for (j in 1:tam){
+    x=sort(runif(n))
+    for(i in 1:n){
+      g[j]=(1/((n^2)*mean(x)))*sum(2*i-n-1)*x[i]
+    }
+  }
+  return (g)
+}
+g2=r.gini2(n,tam)
+gbarra2=mean(g2)
+gmediana2=median(g2)
+quantis2=seq(0, 1, by=0.1)
+decis2=quantile(g2, probs = quantis2)
+```
+Temos que:
+$E( \hat{G}) = `r round(mean(g2), 2)`$  
+$Mediana( \hat{G}) = `r  round(median(g2), 2)`$
+$Quanis( \hat{G}) = [`r round(decis2, 4)`]$
+
+
+Bernoulli(0.1)
+```{r cache=TRUE}
+p=0.1
+r.gini3=function(n,tam){
+  for (j in 1:tam){
+    x=sort(rbinom(n, 1, p))
+    for(i in 1:n){
+      g[j]=(1/((n^2)*mean(x)))*sum(2*i-n-1)*x[i]
+    }
+  }
+  return (g)
+}
+g3=r.gini3(n,tam)
+gbarra3=mean(g3)
+gmediana3=median(g3)
+quantis3=seq(0, 1, by=0.1)
+decis3=quantile(g3, probs = quantis3)
+```
+Temos que:
+$E( \hat{G}) = `r round(mean(g3), 2)`$  
+$Mediana( \hat{G}) = `r  round(median(g3), 2)`$  
+$Quanis( \hat{G}) = [`r round(decis3, 4)`]$  
+
+
+#5. 
+Construa um intervalo aproximado de confiança de 95\% para a razão de Gini $\gamma = E(G)$ se $X$ segue uma distrbuição log-normal com parâmetros desconhecidos. Averigue a taxa de cobertura do intervalo utilizando Monte Carlo.
+
+**Resposta**
+
+
+Teorema Central Do Limite:
+
+$Z=\frac{\bar{X}-\mu}{\frac{\sigma}{\sqrt{n}}} \sim \mathcal{N}(0,1)$
+
+Onde $\bar{X}$ é o estimador de Monte Carlo, e $\mu$ é $\gamma = E(G)$.
+
+Portanto, para quaisquer parâmetros desconhecidos da log-normal, teremos a mesma forma do IC, que será:
+
+$\bar{X}\pm1.96\frac{\sigma}{\sqrt{n}}$
+
+```{r cache=TRUE}
+
+ic.95 =mean(r.gini1(n,tam)) + c(-1,1)*qnorm(0.975)*((sd(r.gini1(n,tam))/sqrt(tam)))
+ic.95
+```
+
+Vamos verificar a taxa de cobertura do ic:
+
+```{r cache=TRUE }
+m = 10
+
+IC_sim_log = replicate(m,{
+    ic.95 =mean(r.gini1(n,tam)) +c(-1,1)*qnorm(0.975)*((sd(r.gini1(n,tam))/sqrt(tam))) 
+    
+})
+
+mu_sim_log = replicate(m,{
+    media = mean(r.gini1(n,tam)) 
+    
+})
+
+mu = mean(mu_sim_log) #estimativa para mu
+
+Taxa =  mu> IC_sim_log[1, ] & mu< IC_sim_log[2, ]
+
+
+
+
+```
+Concluímos que a taxa de cobertura dos ic's é de `r mean(Taxa)`\% .  
+
+
+#6. 
+Use simulação de Monte Carlo para investigar a taxa empírica do Erro Tipo I do teste-$t$. Verifique se estes valores são aproximadamente iguais ao valor nominal $\alpha$ quando a população amostrada não segue uma distribuição normal. Discuta estes casos quando as distribuições seguem:
+
+a. $\chi^2(1)$  
+b. Uniforme(0,2)  
+c. Exponencial(1)  
+    
+Para cada caso, teste $H_0: \mu = \mu_0$ vs. $H_1: \mu \neq \mu_0$, onde $\mu_0$ é a esperança de $\chi^2(1)$, Uniforme(0,2) e Exponencial(1), respectivamente.  
+
+**Resposta**  
+$$\begin{aligned} H_0: & \mu = \mu_0 \ H_1: & \mu \neq \mu_0 \end{aligned}$$ 
+Nesse caso, vamos usar três distribuições diferentes: $\chi^2(1), U(0,2), Exp(1)$, em todos os casos $\mu_0 = 1$.
+
+O cálculo de erro do tipo-I empírico consiste no seguinte:  
+1. Criar $m$ replicatas de Monte Carlo.  
+2. Para cada replicata, gerar uma amostra do tamanho $n$ da distribuição desejada.  
+3. Calcular estatística do teste $T^* = \dfrac{\bar{X} - \mu_0}{S/\sqrt{n}}\sim t_{(n-1)}$, onde $\mu_0 = 1$ (nesse caso).  
+4. Ver a proporção de replicatas de Monte Carlo. que nós rejeitamos a hipótese nula.  
+
+
+
+**a.**  
+ $\chi^2(1)$
+```{r }
+
+m=1000
+n=20
+media=1
+alpha=0.05
+t=replicate(m, {
+    q=rchisq(n=n,df=1)
+    x=t.test(q,alternative="two.sided", mu=1)
+    })
+I=t[3,]<=0.05
+(mean(I))
+
+```
+
+**b.**  
+ $Uniforme(0,2)$
+```{r }
+t=replicate(m, {
+    q=runif(n, min=0, max=2)
+    x=t.test(q,alternative="two.sided", mu=1)
+    })
+I=t[3,]<=0.05
+(mean(I))
+```
+
+**c.**  
+ $Exponencial(1)$
+```{r }
+
+t=replicate(m, {
+    q=rexp(n, rate=1)
+    x=t.test(q,alternative="two.sided", mu=1)
+    })
+I=t[3,]<=0.05
+(mean(I))
+```

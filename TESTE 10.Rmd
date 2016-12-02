@@ -1,0 +1,75 @@
+---
+title: "Teste 10"
+author: "G2"
+date: "24 de maio de 2016"
+output: html_document
+---
+
+##9.9
+
+**a.**
+
+```{r echo=FALSE}
+dados = read.table("http://www.stat.ufl.edu/~rrandles/sta4210/Rclassnotes/data/textdatasets/KutnerData/Chapter%20%206%20Data%20Sets/CH06PR15.txt") #carregar dados 6.15
+
+y = dados$V1
+x1 = dados$V2
+x2 = dados$V3
+x3 = dados$V4
+
+fit0 = lm(y~1)
+fit1 = lm(y~x1)
+fit2 = lm(y~x2)
+fit3 = lm(y~x3)
+fit4 = lm(y~x1+x2)
+fit5 = lm(y~x1+x3)
+fit6 = lm(y~x2+x3)
+full = lm(y~x1+x2+x3)
+#round(summary(fit1)$adj.r.squared,3) #R^2 ap
+
+aic.tab = AIC( fit0, fit1, fit2, fit3, fit4, fit5, fit6, full ) #tabela todos aic
+
+cp0 = anova(fit0)[1,2]/anova(full)[4,3]-(dim(dados)[1]-2*length(coef(fit0)))
+cp1 = anova(fit1)[2,2]/anova(full)[4,3]-(dim(dados)[1]-2*length(coef(fit1)))
+cp2 = anova(fit2)[2,2]/anova(full)[4,3]-(dim(dados)[1]-2*length(coef(fit2)))
+cp3 = anova(fit3)[2,2]/anova(full)[4,3]-(dim(dados)[1]-2*length(coef(fit3)))
+cp4 = anova(fit4)[3,2]/anova(full)[4,3]-(dim(dados)[1]-2*length(coef(fit4)))
+cp5 = anova(fit5)[3,2]/anova(full)[4,3]-(dim(dados)[1]-2*length(coef(fit5)))
+cp6 = anova(fit6)[3,2]/anova(full)[4,3]-(dim(dados)[1]-2*length(coef(fit6)))
+cp7 = anova(full)[4,2]/anova(full)[4,3]-(dim(dados)[1]-2*length(coef(full)))
+
+#calcula press
+y = matrix(y)
+x = matrix(c(x1, x2, x3), ncol=3)
+xt = t(x) 
+c = solve(xt%*%x) #%*% multiplica matrix
+H = x%*%c%*%xt
+n = rep(1, 46)
+i = diag(n) #matriz identidade
+e = (i - H)%*%y #residuo
+d = rep(0, 46)
+for(i in 1:46){
+  d[i] = e[i]/(1-H[i,i]) #sum d^2 = Press
+}
+
+press0 = sum(d^2)
+
+
+x = matrix(c(x1), ncol=1)
+xt = t(x) 
+c = solve(xt%*%x) #%*% multiplica matrix
+H = x%*%c%*%xt
+n = rep(1, 46)
+i = diag(n) #matriz identidade
+e = (i - H)%*%y #residuo
+d = rep(0, 46)
+for(i in 1:46){
+  d[i] = e[i]/(1-H[i,i]) #sum d^2 = Press
+}
+
+press0 = 
+
+
+
+```
+

@@ -1,0 +1,127 @@
+---
+title: "Amostragem por Importância"
+author: "Melissa Palermo"
+date: "7 de abril de 2016"
+output: html_document
+---
+
+O exemplo de amostragem por importância exige a determinação da função $g(x)$, que neste caso é $e^{-x}/(1+x^2)$, pois desejamos:  
+
+$$\int_o^1 \frac{e^{-x}}{1+x^2} dx.$$  
+
+```{r def_gx}
+g = function(x){
+  return (exp(-x)/(1+x^2))
+}
+
+```
+
+Vamos determinas 5 funções candidatas:
+```{r fs}
+f0 = function(x){
+  return(1*(x<=1 & x>=0))
+}
+
+f1 = function(x){
+  return(exp(-x)*(x > 0)) #ou return(dexp(x,1))
+}
+
+f2 = function(x){
+  return(dcauchy(x))
+}
+
+f3 = function(x){
+  return(exp(-x)/(1-exp(-1))*(x>0)*(x<1)) #ou com o &
+}
+
+f4 = function(x){
+  return(4*(1+x^2)^(-1)/pi*(x>0)*(x<1))
+}
+
+```
+
+## Caso 1
+
+A função é uma uniforme.
+```{r sim0}
+n = 1e4
+x = runif(n)
+y = g(x)/f0(x)
+theta0 = mean(y)
+theta0.se = sd(y)
+theta0
+theta0.se
+
+```
+
+
+## Caso 2
+
+A função é uma exponelcial.
+```{r sim1}
+x = rexp(n, 1)
+y = g(x)/f1(x)
+theta1 = mean(y)
+theta1.se = sd(y)
+theta1 #ou (theta1)
+theta1.se
+```
+
+
+## Caso 3
+
+A função é uma Cauchy.
+```{r sim2}
+x = pmax(pmin(rcauchy(n), 1), 0)  #rcauchy(n) 
+y = g(x)/f2(x)
+theta2 = mean(y)
+theta2.se = sd(y)
+theta2
+theta2.se
+```
+
+## Caso 4
+
+Precisamos determinar a função acumulada quando:    
+$$ f(x) = \frac{e^{-x}}{1-e^{-1}} $$  
+
+Usando o que a gente sabe de cálculo:  
+$$ F(x) = \frac{1-e^{-x}}{1-e^{-1}} = u $$  
+
+$$ x = -log(1 - u*(1-e^{-1})) $$  
+
+```{r sim3}
+u = runif(n)
+x = -log(1 - u*(1-exp(-1)))
+y = g(x)/f3(x)
+(theta3 = mean(y))
+(theta3.se = sd(y))
+```
+
+## Caso 5
+
+Método da inversão:
+
+$$F(x) = \frac{4}{\pi} \int_0^x\frac{1}{1+y^2} dy = \frac{4}{\pi}atan(x) = u$$  
+
+$$x = tan\left(\frac{4u}{\pi}\right) $$  
+
+```{r sim4}
+u = runif(n)
+x = tan(pi*u/4)
+y = g(x)/f4(x)
+(theta4 = mean(y))
+(theta4.se = sd(y))
+
+```
+
+## Combinando todos os resultados
+
+```{r final}
+library(printr)
+thetas = c(theta0, theta1, theta2, theta3, theta4)
+thetas.se = c(theta0.se, theta1.se, theta2.se, theta3.se, theta4.se)
+final = data.frame(theta = thetas, se = thetas.se)
+final
+```
+
